@@ -3,27 +3,37 @@ import argparse
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 
+from request_handler import RequestHandler
+
 
 class PasadoirBot(irc.IRCClient):
 
     nickname = "pasadoir"
 
-    def __init__(self, channel):
+    def __init__(self, channel, source_dir):
         self.channel = channel
+        self.handler = RequestHandler(source_dir)
 
 
     def signedOn(self):
         self.join(self.channel)
 
 
+    def privmsg(self, user, channel, input_message):
+        output_message = self.handler.handle(input_message)
+        if output_message:
+            self.msg(channel, output_message)
+
+
 class PasadoirBotFactory(protocol.ClientFactory):
 
-    def __init__(self, channel):
+    def __init__(self, channel, source_dir):
         self.channel = channel
+        self.source_dir = source_dir
 
 
     def buildProtocol(self, addr):
-        return PasadoirBot(self.channel)
+        return PasadoirBot(self.channel, self.source_dir)
 
 
     def clientConnectionLost(self, connector, reason):
@@ -40,8 +50,9 @@ if __name__ == "__main__":
     argparser.add_argument("host")
     argparser.add_argument("port")
     argparser.add_argument("channel")
+    argparser.add_argument("source_dir")
     args = argparser.parse_args()
 
-    factory = PasadoirBotFactory(args.channel)
+    factory = PasadoirBotFactory(args.channel, args.source_dir)
     reactor.connectTCP(args.host, int(args.port), factory)
     reactor.run()

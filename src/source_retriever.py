@@ -12,7 +12,7 @@ class SourceRetriever():
         speaker_filename = os.path.join(self.dir_path, speaker_name + SourceRetriever.SOURCE_EXTENSION)
 
         if not os.path.exists(speaker_filename):
-            return None
+            return []
 
         with open(speaker_filename) as speaker_file:
             return speaker_file.readlines()
