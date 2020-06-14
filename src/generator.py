@@ -6,11 +6,24 @@ class Generator:
         self.rand = rand
 
 
-    def generate(self, transitions):
+    def generate(self, transitions, initial=None):
         if not transitions:
             return None
 
-        lookback = self.get_initial_lookback(transitions)
+        if not initial:
+            initial = self.get_initial_lookback(transitions)
+        elif not initial in transitions:
+            return None
+
+        return self.generate_from_initial(transitions, initial)
+
+
+    def get_initial_lookback(self, transitions):
+        transition_keys = list(transitions.keys())
+        return transition_keys[self.rand.rand_index(len(transition_keys))]
+
+
+    def generate_from_initial(self, transitions, lookback):
         quote = list(lookback)
         i = len(quote)
 
@@ -21,11 +34,6 @@ class Generator:
             i += 1
 
         return quote
-
-
-    def get_initial_lookback(self, transitions):
-        transition_keys = list(transitions.keys())
-        return transition_keys[self.rand.rand_index(len(transition_keys))]
 
 
     def get_follow(self, transitions, lookback):
