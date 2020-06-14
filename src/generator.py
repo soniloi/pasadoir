@@ -10,17 +10,39 @@ class Generator:
         if not transitions:
             return None
 
+        initial = self.resolve_initial_lookback(transitions, initial)
         if not initial:
-            initial = self.get_initial_lookback(transitions)
-        elif not initial in transitions:
             return None
 
         return self.generate_from_initial(transitions, initial)
 
 
-    def get_initial_lookback(self, transitions):
+    def resolve_initial_lookback(self, transitions, given_initial):
+        if not given_initial:
+            return self.generate_initial_lookback(transitions)
+
+        lookback_length = len(next(iter(transitions.keys())))
+
+        if len(given_initial) >= lookback_length:
+            if given_initial in transitions:
+                return given_initial
+            return None
+
+        initial_candidates = self.list_initial_lookback_candidates(transitions, given_initial)
+        return initial_candidates[self.rand.rand_index(len(initial_candidates))]
+
+
+    def generate_initial_lookback(self, transitions):
         transition_keys = list(transitions.keys())
         return transition_keys[self.rand.rand_index(len(transition_keys))]
+
+
+    def list_initial_lookback_candidates(self, transitions, partial_lookback):
+        return [lookback for lookback in transitions.keys() if self.matches_partially(partial_lookback, lookback)]
+
+
+    def matches_partially(self, partial, tup):
+        return all(partial[i] == tup[i] for i in range(0, len(partial)))
 
 
     def generate_from_initial(self, transitions, lookback):
