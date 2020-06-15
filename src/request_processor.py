@@ -1,12 +1,10 @@
 class RequestProcessor:
 
-    # TODO: find a better place for these
+    # TODO: find a better place for this
     GENERATE_TRIGGER = "!"
-    LOOKBACK_LENGTH = 2
 
-    def __init__(self, source_retriever, transition_builder, generator):
-        self.source_retriever = source_retriever
-        self.transition_builder = transition_builder
+    def __init__(self, transition_retriever, generator):
+        self.transition_retriever = transition_retriever
         self.generator = generator
 
 
@@ -22,11 +20,12 @@ class RequestProcessor:
             speaker_name = request_tokens[0][len(RequestProcessor.GENERATE_TRIGGER):]
             seed_tokens = tuple(request_tokens[1:])
 
-            source = self.source_retriever.retrieve(speaker_name)
-            transitions = self.transition_builder.build(source, RequestProcessor.LOOKBACK_LENGTH)
-            quote = self.generator.generate(transitions, seed_tokens)
+            transitions = self.transition_retriever.get(speaker_name)
 
-            if quote:
-                response = ("[{0}] {1}".format(speaker_name, " ".join(quote)))
+            if transitions:
+                quote = self.generator.generate(transitions, seed_tokens)
+
+                if quote:
+                    response = ("[{0}] {1}".format(speaker_name, " ".join(quote)))
 
         return response
