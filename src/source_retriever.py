@@ -14,5 +14,5 @@ class SourceRetriever():
         if not os.path.exists(speaker_filename):
             return []
 
-        with open(speaker_filename) as speaker_file:
+        with open(speaker_filename, encoding="utf8", errors="ignore") as speaker_file:
             return speaker_file.readlines()
