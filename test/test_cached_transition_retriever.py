@@ -45,8 +45,9 @@ class TestCachedTransitionRetriever(unittest.TestCase):
     def test_get_unknown_speaker(self):
         self.source_retriever.retrieve.return_value = []
 
-        transitions = self.transition_retriever.get("anaithnid")
+        speaker_name, transitions = self.transition_retriever.get("anaithnid")
 
+        self.assertIsNone(speaker_name)
         self.assertEqual(transitions, {})
         self.assertEqual(self.transition_retriever.cache[0], (-1, None, None))
         self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
@@ -59,8 +60,9 @@ class TestCachedTransitionRetriever(unittest.TestCase):
     def test_get_no_source(self):
         self.source_retriever.retrieve.return_value = []
 
-        transitions = self.transition_retriever.get("folamh")
+        speaker_name, transitions = self.transition_retriever.get("folamh")
 
+        self.assertEqual(speaker_name, "folamh")
         self.assertEqual(transitions, {})
         self.assertEqual(self.transition_retriever.cache[0], (-1, None, None))
         self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
@@ -74,8 +76,9 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.return_value = self.saoi_source
         self.transition_builder.build.return_value = {}
 
-        transitions = self.transition_retriever.get("saoi")
+        speaker_name, transitions = self.transition_retriever.get("saoi")
 
+        self.assertEqual(speaker_name, "saoi")
         self.assertEqual(transitions, {})
         self.assertEqual(self.transition_retriever.cache[0], (-1, None, None))
         self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
@@ -89,8 +92,9 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.return_value = self.saoi_source
         self.transition_builder.build.return_value = self.saoi_transitions
 
-        transitions = self.transition_retriever.get("saoi")
+        speaker_name, transitions = self.transition_retriever.get("saoi")
 
+        self.assertEqual(speaker_name, "saoi")
         self.assertEqual(transitions, self.saoi_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (0, "saoi", self.saoi_transitions))
         self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
@@ -106,8 +110,9 @@ class TestCachedTransitionRetriever(unittest.TestCase):
 
         self.transition_retriever.get("saoi")
         self.transition_retriever.get("fáidh")
-        transitions = self.transition_retriever.get("eolaí")
+        speaker_name, transitions = self.transition_retriever.get("eolaí")
 
+        self.assertEqual(speaker_name, "eolaí")
         self.assertEqual(transitions, self.eolai_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (0, "saoi", self.saoi_transitions))
         self.assertEqual(self.transition_retriever.cache[1], (1, "fáidh", self.faidh_transitions))
@@ -124,8 +129,9 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.transition_builder.build.return_value = self.saoi_transitions
 
         self.transition_retriever.get("saoi")
-        transitions = self.transition_retriever.get("saoi")
+        speaker_name, transitions = self.transition_retriever.get("saoi")
 
+        self.assertEqual(speaker_name, "saoi")
         self.assertEqual(transitions, self.saoi_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (1, "saoi", self.saoi_transitions))
         self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
@@ -144,8 +150,9 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.transition_retriever.get("eolaí")
         self.transition_retriever.get("eolaí")
         self.transition_retriever.get("eolaí")
-        transitions = self.transition_retriever.get("fáidh")
+        speaker_name, transitions = self.transition_retriever.get("fáidh")
 
+        self.assertEqual(speaker_name, "fáidh")
         self.assertEqual(transitions, self.faidh_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (0, "saoi", self.saoi_transitions))
         self.assertEqual(self.transition_retriever.cache[1], (5, "fáidh", self.faidh_transitions))
@@ -165,8 +172,9 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.transition_retriever.get("fáidh")
         self.transition_retriever.get("eolaí")
         self.transition_retriever.get("saoi")
-        transitions = self.transition_retriever.get("eagnaí")
+        speaker_name, transitions = self.transition_retriever.get("eagnaí")
 
+        self.assertEqual(speaker_name, "eagnaí")
         self.assertEqual(transitions, self.eagnai_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (3, "saoi", self.saoi_transitions))
         self.assertEqual(self.transition_retriever.cache[1], (4, "eagnaí", self.eagnai_transitions))
@@ -182,8 +190,9 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.return_value = self.saoi_source
         self.transition_builder.build.return_value = self.saoi_transitions
 
-        transitions = self.transition_retriever.get("saoi0")
+        speaker_name, transitions = self.transition_retriever.get("saoi0")
 
+        self.assertEqual(speaker_name, "saoi")
         self.assertEqual(transitions, self.saoi_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (0, "saoi", self.saoi_transitions))
         self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))

@@ -9,7 +9,7 @@ class TestRequestProcessor(unittest.TestCase):
         self.saoi_transitions = {("is", "glas") : "iad", ("glas", "iad") : "na", ("iad", "na") : "cnoic", ("na", "cnoic") : "i", ("cnoic", "i") : "bhfad", ("i", "bhfad") : "uainn"}
 
         self.retriever = Mock()
-        self.retriever.get.return_value = {}
+        self.retriever.get.return_value = ("saoi", {})
 
         self.generator = Mock()
         self.generator.generate.return_value = ""
@@ -62,7 +62,7 @@ class TestRequestProcessor(unittest.TestCase):
 
 
     def test_process_generate_request_no_transitions(self):
-        self.retriever.get.return_value = {}
+        self.retriever.get.return_value = ("saoi", {})
 
         response = self.processor.process("!cat")
 
@@ -72,7 +72,7 @@ class TestRequestProcessor(unittest.TestCase):
 
 
     def test_process_generate_request_no_quote(self):
-        self.retriever.get.return_value = self.saoi_transitions
+        self.retriever.get.return_value = ("saoi", self.saoi_transitions)
 
         response = self.processor.process("!saoi lá amháin")
 
@@ -82,7 +82,7 @@ class TestRequestProcessor(unittest.TestCase):
 
 
     def test_process_generate_request_valid_no_whitespace(self):
-        self.retriever.get.return_value = self.saoi_transitions
+        self.retriever.get.return_value = ("saoi", self.saoi_transitions)
         self.generator.generate.return_value = ["na", "cnoic", "i", "bhfad", "uainn"]
 
         response = self.processor.process("!saoi")
@@ -93,13 +93,24 @@ class TestRequestProcessor(unittest.TestCase):
 
 
     def test_process_generate_request_valid_with_whitespace(self):
-        self.retriever.get.return_value = self.saoi_transitions
+        self.retriever.get.return_value = ("saoi", self.saoi_transitions)
         self.generator.generate.return_value = ["na", "cnoic", "i", "bhfad", "uainn"]
 
         response = self.processor.process("     !saoi")
 
         self.assertEqual(response, "[saoi] na cnoic i bhfad uainn")
         self.retriever.get.assert_called_once_with("saoi")
+        self.generator.generate.assert_called_once_with(self.saoi_transitions, ())
+
+
+    def test_process_generate_request_valid_aliased(self):
+        self.retriever.get.return_value = ("saoi", self.saoi_transitions)
+        self.generator.generate.return_value = ["na", "cnoic", "i", "bhfad", "uainn"]
+
+        response = self.processor.process("!saoi_")
+
+        self.assertEqual(response, "[saoi] na cnoic i bhfad uainn")
+        self.retriever.get.assert_called_once_with("saoi_")
         self.generator.generate.assert_called_once_with(self.saoi_transitions, ())
 
 

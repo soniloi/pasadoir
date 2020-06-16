@@ -51,27 +51,27 @@ class CachedTransitionRetriever:
         min_age = self.cache[0].age
         min_age_index = 0
 
-        if not speaker_nick in self.aliases:
-            return {}
-        speaker_name = self.aliases[speaker_nick]
+        speaker_name = self.aliases.get(speaker_nick, None)
+        if not speaker_name:
+            return None, {}
 
         for i, item in enumerate(self.cache):
 
             if item.key == speaker_name:
                 self.cache[i] = CacheItem(self.age_counter, item.key, item.value)
                 self.age_counter += 1
-                return item.value
+                return speaker_name, item.value
 
             if item.age < min_age:
                 min_age = item.age
                 min_age_index = i
 
+        transitions = {}
         source = self.source_retriever.retrieve(speaker_name)
         if source:
             transitions = self.transition_builder.build(source, CachedTransitionRetriever.LOOKBACK_LENGTH)
             if transitions:
                 self.cache[min_age_index] = CacheItem(self.age_counter, speaker_name, transitions)
                 self.age_counter += 1
-                return transitions
 
-        return {}
+        return speaker_name, transitions

@@ -17,10 +17,10 @@ class RequestProcessor:
 
         if request.startswith(RequestProcessor.GENERATE_TRIGGER):
             request_tokens = request.split()
-            speaker_name = request_tokens[0][len(RequestProcessor.GENERATE_TRIGGER):]
+            speaker_nick = request_tokens[0][len(RequestProcessor.GENERATE_TRIGGER):]
             seed_tokens = tuple(request_tokens[1:])
 
-            transitions = self.transition_retriever.get(speaker_name)
+            speaker_name, transitions = self.transition_retriever.get(speaker_nick)
 
             if transitions:
                 quote = self.generator.generate(transitions, seed_tokens)
