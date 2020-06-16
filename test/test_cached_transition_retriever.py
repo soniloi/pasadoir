@@ -22,10 +22,11 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.eolai_source = ["is binn béal ina thost"]
         self.eagnai_source = ["bíonn gach tosú lag"]
         self.folamh_source = []
-        self.saoi_transitions = {("aithníonn", "ciaróg") : "ciaróg", ("ciaróg", "ciaróg") : "eile"}
-        self.faidh_transitions = {("is", "leor") : "nod", ("leor", "nod") : "don", ("nod", "don") : "eolach"}
-        self.eolai_transitions = {("is", "binn") : "béal", ("binn", "béal") : "ina", ("béal", "ina") : "thost"}
-        self.eagnai_transitions = {("bíonn", "gach") : "tosú", ("gach", "tosú") : "lag"}
+        self.saoi_transitions = {("fillean", "an") : ["feall"], ("an", "feall") : ["ar"], ("feall", "ar") : ["an"], ("ar", "an") : ["bhfeallaire"]}
+        self.faidh_transitions = {("is", "leor") : ["nod"], ("leor", "nod") : ["don"], ("nod", "don") : ["eolach"]}
+        self.eolai_transitions = {("bíonn", "blas") : ["ar"], ("blas", "ar") : ["an"], ("ar", "an") : ["mbeagán"]}
+        self.eagnai_transitions = {("bíonn", "gach") : ["tosú"], ("gach", "tosú") : ["lag"]}
+        self.eolai_saoi_transitions = {("bíonn", "blas") : ["ar"], ("blas", "ar") : ["an"], ("ar", "an") : ["mbeagán", "bhfeallaire"], ("fillean", "an") : ["feall"], ("an", "feall") : ["ar"], ("feall", "ar") : ["an"]}
 
 
     def setup_source_retriever(self):
@@ -54,13 +55,13 @@ class TestCachedTransitionRetriever(unittest.TestCase):
     def test_get_unknown_speaker(self):
         self.source_retriever.retrieve.return_value = []
 
-        speaker_name, transitions = self.transition_retriever.get("anaithnid")
+        speaker_names, transitions = self.transition_retriever.get(["anaithnid"])
 
-        self.assertIsNone(speaker_name)
+        self.assertIsNone(speaker_names)
         self.assertEqual(transitions, {})
-        self.assertEqual(self.transition_retriever.cache[0], (-1, None, None))
-        self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
-        self.assertEqual(self.transition_retriever.cache[2], (-1, None, None))
+        self.assertEqual(self.transition_retriever.cache[0], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[1], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
         self.assertEqual(self.transition_retriever.age_counter, 0)
         self.source_retriever.retrieve.assert_not_called()
         self.transition_builder.build.assert_not_called()
@@ -69,13 +70,13 @@ class TestCachedTransitionRetriever(unittest.TestCase):
     def test_get_no_source(self):
         self.source_retriever.retrieve.return_value = []
 
-        speaker_name, transitions = self.transition_retriever.get("folamh")
+        speaker_names, transitions = self.transition_retriever.get(["folamh"])
 
-        self.assertEqual(speaker_name, "folamh")
+        self.assertEqual(speaker_names, ["folamh"])
         self.assertEqual(transitions, {})
-        self.assertEqual(self.transition_retriever.cache[0], (-1, None, None))
-        self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
-        self.assertEqual(self.transition_retriever.cache[2], (-1, None, None))
+        self.assertEqual(self.transition_retriever.cache[0], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[1], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
         self.assertEqual(self.transition_retriever.age_counter, 0)
         self.source_retriever.retrieve.assert_called_once_with("folamh")
         self.transition_builder.build.assert_not_called()
@@ -85,13 +86,13 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.return_value = self.saoi_source
         self.transition_builder.build.return_value = {}
 
-        speaker_name, transitions = self.transition_retriever.get("saoi")
+        speaker_names, transitions = self.transition_retriever.get(["saoi"])
 
-        self.assertEqual(speaker_name, "saoi")
+        self.assertEqual(speaker_names, ["saoi"])
         self.assertEqual(transitions, {})
-        self.assertEqual(self.transition_retriever.cache[0], (-1, None, None))
-        self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
-        self.assertEqual(self.transition_retriever.cache[2], (-1, None, None))
+        self.assertEqual(self.transition_retriever.cache[0], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[1], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
         self.assertEqual(self.transition_retriever.age_counter, 0)
         self.source_retriever.retrieve.assert_called_once_with("saoi")
         self.transition_builder.build.assert_called_once_with(self.saoi_source, 2)
@@ -101,13 +102,13 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.return_value = self.saoi_source
         self.transition_builder.build.return_value = self.saoi_transitions
 
-        speaker_name, transitions = self.transition_retriever.get("saoi")
+        speaker_names, transitions = self.transition_retriever.get(["saoi"])
 
-        self.assertEqual(speaker_name, "saoi")
+        self.assertEqual(speaker_names, ["saoi"])
         self.assertEqual(transitions, self.saoi_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (0, "saoi", self.saoi_transitions))
-        self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
-        self.assertEqual(self.transition_retriever.cache[2], (-1, None, None))
+        self.assertEqual(self.transition_retriever.cache[1], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
         self.assertEqual(self.transition_retriever.age_counter, 1)
         self.source_retriever.retrieve.assert_called_once_with("saoi")
         self.transition_builder.build.assert_called_once_with(self.saoi_source, 2)
@@ -117,11 +118,11 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.side_effect = [self.saoi_source, self.faidh_source, self.eolai_source]
         self.transition_builder.build.side_effect = [self.saoi_transitions, self.faidh_transitions, self.eolai_transitions]
 
-        self.transition_retriever.get("saoi")
-        self.transition_retriever.get("fáidh")
-        speaker_name, transitions = self.transition_retriever.get("eolaí")
+        self.transition_retriever.get(["saoi"])
+        self.transition_retriever.get(["fáidh"])
+        speaker_names, transitions = self.transition_retriever.get(["eolaí"])
 
-        self.assertEqual(speaker_name, "eolaí")
+        self.assertEqual(speaker_names, ["eolaí"])
         self.assertEqual(transitions, self.eolai_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (0, "saoi", self.saoi_transitions))
         self.assertEqual(self.transition_retriever.cache[1], (1, "fáidh", self.faidh_transitions))
@@ -137,14 +138,14 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.return_value = self.saoi_source
         self.transition_builder.build.return_value = self.saoi_transitions
 
-        self.transition_retriever.get("saoi")
-        speaker_name, transitions = self.transition_retriever.get("saoi")
+        self.transition_retriever.get(["saoi"])
+        speaker_names, transitions = self.transition_retriever.get(["saoi"])
 
-        self.assertEqual(speaker_name, "saoi")
+        self.assertEqual(speaker_names, ["saoi"])
         self.assertEqual(transitions, self.saoi_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (1, "saoi", self.saoi_transitions))
-        self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
-        self.assertEqual(self.transition_retriever.cache[2], (-1, None, None))
+        self.assertEqual(self.transition_retriever.cache[1], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
         self.assertEqual(self.transition_retriever.age_counter, 2)
         self.source_retriever.retrieve.assert_called_once_with("saoi")
         self.transition_builder.build.assert_called_once_with(self.saoi_source, 2)
@@ -154,14 +155,14 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.side_effect = [self.saoi_source, self.faidh_source, self.eolai_source, self.eolai_source, self.eolai_source, self.faidh_source]
         self.transition_builder.build.side_effect = [self.saoi_transitions, self.faidh_transitions, self.eolai_transitions, self.eolai_transitions, self.eolai_transitions, self.faidh_transitions]
 
-        self.transition_retriever.get("saoi")
-        self.transition_retriever.get("fáidh")
-        self.transition_retriever.get("eolaí")
-        self.transition_retriever.get("eolaí")
-        self.transition_retriever.get("eolaí")
-        speaker_name, transitions = self.transition_retriever.get("fáidh")
+        self.transition_retriever.get(["saoi"])
+        self.transition_retriever.get(["fáidh"])
+        self.transition_retriever.get(["eolaí"])
+        self.transition_retriever.get(["eolaí"])
+        self.transition_retriever.get(["eolaí"])
+        speaker_names, transitions = self.transition_retriever.get(["fáidh"])
 
-        self.assertEqual(speaker_name, "fáidh")
+        self.assertEqual(speaker_names, ["fáidh"])
         self.assertEqual(transitions, self.faidh_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (0, "saoi", self.saoi_transitions))
         self.assertEqual(self.transition_retriever.cache[1], (5, "fáidh", self.faidh_transitions))
@@ -177,13 +178,13 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.side_effect = [self.saoi_source, self.faidh_source, self.eolai_source, self.eagnai_source]
         self.transition_builder.build.side_effect = [self.saoi_transitions, self.faidh_transitions, self.eolai_transitions, self.eagnai_transitions]
 
-        self.transition_retriever.get("saoi")
-        self.transition_retriever.get("fáidh")
-        self.transition_retriever.get("eolaí")
-        self.transition_retriever.get("saoi")
-        speaker_name, transitions = self.transition_retriever.get("eagnaí")
+        self.transition_retriever.get(["saoi"])
+        self.transition_retriever.get(["fáidh"])
+        self.transition_retriever.get(["eolaí"])
+        self.transition_retriever.get(["saoi"])
+        speaker_names, transitions = self.transition_retriever.get(["eagnaí"])
 
-        self.assertEqual(speaker_name, "eagnaí")
+        self.assertEqual(speaker_names, ["eagnaí"])
         self.assertEqual(transitions, self.eagnai_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (3, "saoi", self.saoi_transitions))
         self.assertEqual(self.transition_retriever.cache[1], (4, "eagnaí", self.eagnai_transitions))
@@ -199,16 +200,48 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.return_value = self.saoi_source
         self.transition_builder.build.return_value = self.saoi_transitions
 
-        speaker_name, transitions = self.transition_retriever.get("saoi0")
+        speaker_names, transitions = self.transition_retriever.get(["saoi0"])
 
-        self.assertEqual(speaker_name, "saoi")
+        self.assertEqual(speaker_names, ["saoi"])
         self.assertEqual(transitions, self.saoi_transitions)
         self.assertEqual(self.transition_retriever.cache[0], (0, "saoi", self.saoi_transitions))
-        self.assertEqual(self.transition_retriever.cache[1], (-1, None, None))
-        self.assertEqual(self.transition_retriever.cache[2], (-1, None, None))
+        self.assertEqual(self.transition_retriever.cache[1], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
         self.assertEqual(self.transition_retriever.age_counter, 1)
         self.source_retriever.retrieve.assert_called_once_with("saoi")
         self.transition_builder.build.assert_called_once_with(self.saoi_source, 2)
+
+
+    def test_get_merged_in_order(self):
+        self.source_retriever.retrieve.side_effect = [self.eolai_source, self.saoi_source]
+        self.transition_builder.build.side_effect = [self.eolai_transitions, self.saoi_transitions]
+
+        speaker_names, transitions = self.transition_retriever.get(["eolaí", "saoi"])
+
+        self.assertEqual(speaker_names, ["eolaí", "saoi"])
+        self.assertEqual(transitions, self.eolai_saoi_transitions)
+        self.assertEqual(self.transition_retriever.cache[0], (0, "eolaí", self.eolai_transitions))
+        self.assertEqual(self.transition_retriever.cache[1], (1, "saoi", self.saoi_transitions))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.age_counter, 2)
+        self.source_retriever.retrieve.assert_has_calls([call("eolaí"), call("saoi")], any_order=False)
+        self.transition_builder.build.assert_has_calls([call(self.eolai_source, 2), call(self.saoi_source, 2)], any_order=False)
+
+
+    def test_get_merged_out_of_order(self):
+        self.source_retriever.retrieve.side_effect = [self.eolai_source, self.saoi_source]
+        self.transition_builder.build.side_effect = [self.eolai_transitions, self.saoi_transitions]
+
+        speaker_names, transitions = self.transition_retriever.get(["saoi", "eolaí"])
+
+        self.assertEqual(speaker_names, ["eolaí", "saoi"])
+        self.assertEqual(transitions, self.eolai_saoi_transitions)
+        self.assertEqual(self.transition_retriever.cache[0], (0, "eolaí", self.eolai_transitions))
+        self.assertEqual(self.transition_retriever.cache[1], (1, "saoi", self.saoi_transitions))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.age_counter, 2)
+        self.source_retriever.retrieve.assert_has_calls([call("eolaí"), call("saoi")], any_order=False)
+        self.transition_builder.build.assert_has_calls([call(self.eolai_source, 2), call(self.saoi_source, 2)], any_order=False)
 
 
 if __name__ == "__main__":

@@ -20,19 +20,20 @@ class RequestProcessor:
 
 
     def process_generate_request(self, request):
-        speaker_nick, seed_tokens = self.split_generate_request(request)
-        speaker_name, transitions = self.transition_retriever.get(speaker_nick)
+        speaker_nicks, seed_tokens = self.split_generate_request(request)
+        speaker_names, transitions = self.transition_retriever.get(speaker_nicks)
 
         if transitions:
             quote = self.generator.generate(transitions, seed_tokens)
             if quote:
-                return ("[{0}] {1}".format(speaker_name, " ".join(quote)))
+                return ("[{0}] {1}".format(":".join(speaker_names), " ".join(quote)))
 
         return ""
 
 
     def split_generate_request(self, request):
         request_tokens = request.split()
-        speaker_nick = request_tokens[0][len(RequestProcessor.GENERATE_TRIGGER):]
+        speaker_token = request_tokens[0][len(RequestProcessor.GENERATE_TRIGGER):]
+        speaker_nicks = speaker_token.split(":")
         seed_tokens = tuple(request_tokens[1:])
-        return speaker_nick, seed_tokens
+        return speaker_nicks, seed_tokens
