@@ -6,6 +6,17 @@ from cached_transition_retriever import CachedTransitionRetriever
 class TestCachedTransitionRetriever(unittest.TestCase):
 
     def setUp(self):
+        self.setup_data()
+        self.setup_source_retriever()
+        self.setup_transition_builder()
+        self.transition_retriever = CachedTransitionRetriever(self.source_retriever, self.transition_builder, 3)
+
+
+    def tearDown(self):
+        pass
+
+
+    def setup_data(self):
         self.saoi_source = ["aithníonn ciaróg ciaróg eile"]
         self.faidh_source = ["is leor nod don eolach"]
         self.eolai_source = ["is binn béal ina thost"]
@@ -16,19 +27,17 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.eolai_transitions = {("is", "binn") : "béal", ("binn", "béal") : "ina", ("béal", "ina") : "thost"}
         self.eagnai_transitions = {("bíonn", "gach") : "tosú", ("gach", "tosú") : "lag"}
 
+
+    def setup_source_retriever(self):
         self.source_retriever = Mock()
         self.source_retriever.retrieve.return_value = []
         self.source_retriever.list_speakers.return_value = ["eagnaí", "eolaí", "fáidh", "folamh", "saoi"]
         self.source_retriever.get_merge_info.return_value = ["anaithnid\tanaithnid2", "eolaí", "saoi\tsaoi__\tsaoi0"]
 
+
+    def setup_transition_builder(self):
         self.transition_builder = Mock()
         self.transition_builder.build.return_value = {}
-
-        self.transition_retriever = CachedTransitionRetriever(self.source_retriever, self.transition_builder, 3)
-
-
-    def tearDown(self):
-        pass
 
 
     def test_init_aliasing(self):

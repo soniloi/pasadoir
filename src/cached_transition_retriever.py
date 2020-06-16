@@ -11,12 +11,8 @@ class CachedTransitionRetriever:
         self.source_retriever = source_retriever
         self.transition_builder = transition_builder
         self.age_counter = 0
-
         self.speaker_names, self.aliases = self.build_alias_map()
-
-        self.cache = []
-        for i in range(0, capacity):
-            self.cache.append(CacheItem(age=-1, key=None, value=None))
+        self.cache = [CacheItem(age=-1, key=None, value=None)] * capacity
 
 
     def build_alias_map(self):
@@ -58,8 +54,7 @@ class CachedTransitionRetriever:
         for i, item in enumerate(self.cache):
 
             if item.key == speaker_name:
-                self.cache[i] = CacheItem(self.age_counter, item.key, item.value)
-                self.age_counter += 1
+                self.update_cache_line(i, item.key, item.value)
                 return speaker_name, item.value
 
             if item.age < min_age:
@@ -71,7 +66,12 @@ class CachedTransitionRetriever:
         if source:
             transitions = self.transition_builder.build(source, CachedTransitionRetriever.LOOKBACK_LENGTH)
             if transitions:
-                self.cache[min_age_index] = CacheItem(self.age_counter, speaker_name, transitions)
-                self.age_counter += 1
+                self.update_cache_line(min_age_index, speaker_name, transitions)
 
         return speaker_name, transitions
+
+
+    def update_cache_line(self, index, key, value):
+        self.cache[index] = CacheItem(self.age_counter, key, value)
+        self.age_counter += 1
+        #print(["{0}:{1}".format(item.key, item.age) for item in self.cache])
