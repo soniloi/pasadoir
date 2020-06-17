@@ -29,7 +29,10 @@ class Generator:
             return None
 
         initial_candidates = self.list_initial_lookback_candidates(transitions, given_initial)
-        return initial_candidates[self.rand.rand_index(len(initial_candidates))]
+        if initial_candidates:
+            return initial_candidates[self.rand.rand_index(len(initial_candidates))]
+
+        return None
 
 
     def generate_initial_lookback(self, transitions):

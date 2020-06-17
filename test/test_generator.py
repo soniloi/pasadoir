@@ -76,6 +76,20 @@ class TestGenerator(unittest.TestCase):
         self.assertEqual(quote, ["sat", "on", "the", "mat"])
 
 
+    def test_generate_with_partial_invalid_initial(self):
+        transitions = {
+            ("the", "cat") : ["sat"],
+            ("cat", "sat") : ["on"],
+            ("sat", "on") : ["the"],
+            ("on", "the") : ["mat"],
+        }
+        self.rand.rand_index.return_value = 0
+
+        quote = self.generator.generate(transitions, ("blah",))
+
+        self.assertEqual(quote, None)
+
+
     def test_generate_with_partial_valid_initial(self):
         transitions = {
             ("the", "cat") : ["sat"],
