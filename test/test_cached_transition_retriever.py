@@ -28,7 +28,6 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.eagnai_transitions = {("bíonn", "gach") : ["tosú"], ("gach", "tosú") : ["lag"]}
         self.eolai_saoi_transitions = {("bíonn", "blas") : ["ar"], ("blas", "ar") : ["an"], ("ar", "an") : ["mbeagán", "bhfeallaire"], ("fillean", "an") : ["feall"], ("an", "feall") : ["ar"], ("feall", "ar") : ["an"]}
 
-
     def setup_source_retriever(self):
         self.source_retriever = Mock()
         self.source_retriever.retrieve.return_value = []
@@ -233,6 +232,38 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.transition_builder.build.side_effect = [self.eolai_transitions, self.saoi_transitions]
 
         speaker_names, transitions = self.transition_retriever.get(["saoi", "eolaí"])
+
+        self.assertEqual(speaker_names, ["eolaí", "saoi"])
+        self.assertEqual(transitions, self.eolai_saoi_transitions)
+        self.assertEqual(self.transition_retriever.cache[0], (0, "eolaí", self.eolai_transitions))
+        self.assertEqual(self.transition_retriever.cache[1], (1, "saoi", self.saoi_transitions))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.age_counter, 2)
+        self.source_retriever.retrieve.assert_has_calls([call("eolaí"), call("saoi")], any_order=False)
+        self.transition_builder.build.assert_has_calls([call(self.eolai_source, 2), call(self.saoi_source, 2)], any_order=False)
+
+
+    def test_get_merged_some_unknown(self):
+        self.source_retriever.retrieve.side_effect = [self.eolai_source, self.saoi_source]
+        self.transition_builder.build.side_effect = [self.eolai_transitions, self.saoi_transitions]
+
+        speaker_names, transitions = self.transition_retriever.get(["eolaí", "saoi", "anaithnid"])
+
+        self.assertEqual(speaker_names, ["eolaí", "saoi"])
+        self.assertEqual(transitions, self.eolai_saoi_transitions)
+        self.assertEqual(self.transition_retriever.cache[0], (0, "eolaí", self.eolai_transitions))
+        self.assertEqual(self.transition_retriever.cache[1], (1, "saoi", self.saoi_transitions))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.age_counter, 2)
+        self.source_retriever.retrieve.assert_has_calls([call("eolaí"), call("saoi")], any_order=False)
+        self.transition_builder.build.assert_has_calls([call(self.eolai_source, 2), call(self.saoi_source, 2)], any_order=False)
+
+
+    def test_get_merged_too_many_speakers(self):
+        self.source_retriever.retrieve.side_effect = [self.eolai_source, self.saoi_source]
+        self.transition_builder.build.side_effect = [self.eolai_transitions, self.saoi_transitions]
+
+        speaker_names, transitions = self.transition_retriever.get(["eolaí", "saoi", "fáidh"])
 
         self.assertEqual(speaker_names, ["eolaí", "saoi"])
         self.assertEqual(transitions, self.eolai_saoi_transitions)

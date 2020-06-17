@@ -13,6 +13,7 @@ class CachedTransitionRetriever:
         self.age_counter = 0
         self.speaker_names, self.aliases = self.build_alias_map()
         self.cache = [CacheItem(age=-1, key="", value={})] * capacity
+        self.max_merged_speakers = capacity - 1
 
 
     def build_alias_map(self):
@@ -62,7 +63,7 @@ class CachedTransitionRetriever:
     def resolve_speaker_names(self, speaker_nicks):
         speaker_names = []
 
-        for nick in speaker_nicks:
+        for nick in speaker_nicks[:self.max_merged_speakers]:
             if nick in self.aliases:
                 speaker_names.append(self.aliases[nick])
 
