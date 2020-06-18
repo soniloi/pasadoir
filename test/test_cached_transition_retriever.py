@@ -292,5 +292,26 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.transition_builder.build.assert_has_calls([call(self.eolai_source, 2), call(self.saoi_source, 2)], any_order=False)
 
 
+    def test_refresh(self):
+        self.source_retriever.retrieve.side_effect = [self.saoi_source, self.faidh_source, self.eolai_source]
+        self.transition_builder.build.side_effect = [self.saoi_transitions, self.faidh_transitions, self.eolai_transitions]
+
+        self.transition_retriever.get(["saoi"])
+        self.transition_retriever.get(["fáidh"])
+        self.transition_retriever.get(["eolaí"])
+        self.transition_retriever.refresh()
+
+        self.assertEqual(self.transition_retriever.cache[0], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[1], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.age_counter, 0)
+        self.assertEqual(self.source_retriever.retrieve.call_count, 3)
+        self.source_retriever.retrieve.assert_has_calls([call("saoi"), call("fáidh"), call("eolaí")], any_order=False)
+        self.assertEqual(self.source_retriever.list_speakers.call_count, 2)
+        self.assertEqual(self.source_retriever.get_merge_info.call_count, 2)
+        self.assertEqual(self.transition_builder.build.call_count, 3)
+        self.transition_builder.build.assert_has_calls([call(self.saoi_source, 2), call(self.faidh_source, 2), call(self.eolai_source, 2)], any_order=False)
+
+
 if __name__ == "__main__":
     unittest.main()

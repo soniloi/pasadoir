@@ -10,10 +10,15 @@ class CachedTransitionRetriever:
     def __init__(self, source_retriever, transition_builder, capacity=DEFAULT_CAPACITY):
         self.source_retriever = source_retriever
         self.transition_builder = transition_builder
-        self.age_counter = 0
+        self.capacity = capacity
+        self.max_merged_speakers = self.capacity - 1
+        self.refresh()
+
+
+    def refresh(self):
         self.speaker_names, self.aliases = self.build_alias_map()
-        self.cache = [CacheItem(age=-1, key="", value={})] * capacity
-        self.max_merged_speakers = capacity - 1
+        self.cache = [CacheItem(age=-1, key="", value={})] * self.capacity
+        self.age_counter = 0
 
 
     def build_alias_map(self):

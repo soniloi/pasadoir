@@ -15,7 +15,7 @@ class RequestHandler:
         transition_retriever = CachedTransitionRetriever(source_retriever, transition_builder)
         quote_generator = QuoteGenerator(Rand())
         self.quote_processor = QuoteRequestProcessor(transition_retriever, quote_generator)
-        self.meta_processor = MetaRequestProcessor()
+        self.meta_processor = MetaRequestProcessor(transition_retriever)
         self.processors = {
             config.GENERATE_REQUEST_TRIGGER : self.quote_processor,
             config.META_REQUEST_TRIGGER : self.meta_processor,
