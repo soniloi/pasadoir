@@ -115,6 +115,17 @@ class TestRequestProcessor(unittest.TestCase):
         self.generator.generate.assert_called_once_with(self.saoi_transitions, ())
 
 
+    def test_process_generate_request_valid_uppercase(self):
+        self.retriever.get.return_value = (["saoi"], self.saoi_transitions)
+        self.generator.generate.return_value = ["feall", "ar", "an", "bhfeallaire"]
+
+        response = self.processor.process("!SAOI")
+
+        self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
+        self.retriever.get.assert_called_once_with(["saoi"])
+        self.generator.generate.assert_called_once_with(self.saoi_transitions, ())
+
+
     def test_process_generate_request_valid_merge(self):
         self.retriever.get.return_value = (["eolaí", "saoi"], self.eolai_saoi_transitions)
         self.generator.generate.return_value = ["bíonn", "blas", "ar", "an", "bhfeallaire"]

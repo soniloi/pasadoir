@@ -33,7 +33,7 @@ class RequestProcessor:
 
     def split_generate_request(self, request):
         request_tokens = request.split()
-        speaker_token = request_tokens[0][len(RequestProcessor.GENERATE_TRIGGER):]
+        speaker_token = request_tokens[0][len(RequestProcessor.GENERATE_TRIGGER):].lower()
         speaker_nicks = speaker_token.split(":")
         seed_tokens = tuple(request_tokens[1:])
         return speaker_nicks, seed_tokens
