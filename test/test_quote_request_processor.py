@@ -1,9 +1,9 @@
 import unittest
 from unittest.mock import Mock
 
-from request_processor import RequestProcessor
+from quote_request_processor import QuoteRequestProcessor
 
-class TestRequestProcessor(unittest.TestCase):
+class TestQuoteRequestProcessor(unittest.TestCase):
 
     def setUp(self):
         self.saoi_transitions = {("fillean", "an") : ["feall"], ("an", "feall") : ["ar"], ("feall", "ar") : ["an"], ("ar", "an") : ["bhfeallaire"]}
@@ -15,47 +15,15 @@ class TestRequestProcessor(unittest.TestCase):
         self.generator = Mock()
         self.generator.generate.return_value = ""
 
-        self.processor = RequestProcessor(self.retriever, self.generator)
+        self.processor = QuoteRequestProcessor(self.retriever, self.generator)
 
 
     def tearDown(self):
         pass
 
 
-    def test_process_empty_request(self):
-        response = self.processor.process("")
-
-        self.assertEqual(response, "")
-        self.retriever.get.assert_not_called()
-        self.generator.generate.assert_not_called()
-
-
-    def test_process_whitespace_request(self):
-        response = self.processor.process("      \t  ")
-
-        self.assertEqual(response, "")
-        self.retriever.get.assert_not_called()
-        self.generator.generate.assert_not_called()
-
-
-    def test_process_unknown_request(self):
-        response = self.processor.process("hello")
-
-        self.assertEqual(response, "")
-        self.retriever.get.assert_not_called()
-        self.generator.generate.assert_not_called()
-
-
-    def test_process_trigger_only(self):
-        response = self.processor.process("!  ")
-
-        self.assertEqual(response, "")
-        self.retriever.get.assert_called_once_with([""])
-        self.generator.generate.assert_not_called()
-
-
     def test_process_generate_request_no_source(self):
-        response = self.processor.process("!anaithnid")
+        response = self.processor.process("anaithnid")
 
         self.assertEqual(response, "")
         self.retriever.get.assert_called_once_with(["anaithnid"])
@@ -65,7 +33,7 @@ class TestRequestProcessor(unittest.TestCase):
     def test_process_generate_request_no_transitions(self):
         self.retriever.get.return_value = (["saoi"], {})
 
-        response = self.processor.process("!cat")
+        response = self.processor.process("cat")
 
         self.assertEqual(response, "")
         self.retriever.get.assert_called_once_with(["cat"])
@@ -75,7 +43,7 @@ class TestRequestProcessor(unittest.TestCase):
     def test_process_generate_request_no_quote(self):
         self.retriever.get.return_value = (["saoi"], self.saoi_transitions)
 
-        response = self.processor.process("!saoi lá amháin")
+        response = self.processor.process("saoi lá amháin")
 
         self.assertEqual(response, "")
         self.retriever.get.assert_called_once_with(["saoi"])
@@ -86,7 +54,7 @@ class TestRequestProcessor(unittest.TestCase):
         self.retriever.get.return_value = (["saoi"], self.saoi_transitions)
         self.generator.generate.return_value = ["feall", "ar", "an", "bhfeallaire"]
 
-        response = self.processor.process("!saoi")
+        response = self.processor.process("saoi")
 
         self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
         self.retriever.get.assert_called_once_with(["saoi"])
@@ -97,7 +65,7 @@ class TestRequestProcessor(unittest.TestCase):
         self.retriever.get.return_value = (["saoi"], self.saoi_transitions)
         self.generator.generate.return_value = ["feall", "ar", "an", "bhfeallaire"]
 
-        response = self.processor.process("     !saoi")
+        response = self.processor.process("     saoi")
 
         self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
         self.retriever.get.assert_called_once_with(["saoi"])
@@ -108,7 +76,7 @@ class TestRequestProcessor(unittest.TestCase):
         self.retriever.get.return_value = (["saoi"], self.saoi_transitions)
         self.generator.generate.return_value = ["feall", "ar", "an", "bhfeallaire"]
 
-        response = self.processor.process("!saoi_")
+        response = self.processor.process("saoi_")
 
         self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
         self.retriever.get.assert_called_once_with(["saoi_"])
@@ -119,7 +87,7 @@ class TestRequestProcessor(unittest.TestCase):
         self.retriever.get.return_value = (["saoi"], self.saoi_transitions)
         self.generator.generate.return_value = ["feall", "ar", "an", "bhfeallaire"]
 
-        response = self.processor.process("!SAOI")
+        response = self.processor.process("SAOI")
 
         self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
         self.retriever.get.assert_called_once_with(["saoi"])
@@ -130,7 +98,7 @@ class TestRequestProcessor(unittest.TestCase):
         self.retriever.get.return_value = (["eolaí", "saoi"], self.eolai_saoi_transitions)
         self.generator.generate.return_value = ["bíonn", "blas", "ar", "an", "bhfeallaire"]
 
-        response = self.processor.process("!eolaí:saoi")
+        response = self.processor.process("eolaí:saoi")
 
         self.assertEqual(response, "[eolaí:saoi] bíonn blas ar an bhfeallaire")
         self.retriever.get.assert_called_once_with(["eolaí", "saoi"])

@@ -1,4 +1,4 @@
-class Generator:
+class QuoteGenerator:
 
     MAX_QUOTE_TOKENS = 100
 
@@ -52,7 +52,7 @@ class Generator:
         quote = list(lookback)
         i = len(quote)
 
-        while i < Generator.MAX_QUOTE_TOKENS and lookback in transitions:
+        while i < QuoteGenerator.MAX_QUOTE_TOKENS and lookback in transitions:
             follow = self.get_follow(transitions, lookback)
             quote.append(follow)
             lookback = self.update_lookback(lookback, follow)

@@ -3,12 +3,13 @@ import argparse
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 
+import config
 from request_handler import RequestHandler
 
 
 class PasadoirBot(irc.IRCClient):
 
-    nickname = "pasadoir"
+    nickname = config.BOT_NICK
 
     def __init__(self, channel, source_dir):
         self.channel = channel

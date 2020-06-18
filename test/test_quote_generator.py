@@ -1,13 +1,13 @@
 import unittest
 from unittest.mock import Mock
 
-from generator import Generator
+from quote_generator import QuoteGenerator
 
-class TestGenerator(unittest.TestCase):
+class TestQuoteGenerator(unittest.TestCase):
 
     def setUp(self):
         self.rand = Mock()
-        self.generator = Generator(self.rand)
+        self.generator = QuoteGenerator(self.rand)
 
 
     def tearDown(self):
