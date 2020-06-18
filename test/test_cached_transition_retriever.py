@@ -9,7 +9,7 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.setup_data()
         self.setup_source_retriever()
         self.setup_transition_builder()
-        self.transition_retriever = CachedTransitionRetriever(self.source_retriever, self.transition_builder, 3)
+        self.transition_retriever = CachedTransitionRetriever(self.source_retriever, self.transition_builder, capacity=3, min_lookbacks=2)
 
 
     def tearDown(self):
@@ -21,17 +21,20 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.faidh_source = ["is leor nod don eolach"]
         self.eolai_source = ["is binn béal ina thost"]
         self.eagnai_source = ["bíonn gach tosú lag"]
+        self.beag_source = ["bailíonn brobh beart"]
         self.folamh_source = []
         self.saoi_transitions = {("fillean", "an") : ["feall"], ("an", "feall") : ["ar"], ("feall", "ar") : ["an"], ("ar", "an") : ["bhfeallaire"]}
         self.faidh_transitions = {("is", "leor") : ["nod"], ("leor", "nod") : ["don"], ("nod", "don") : ["eolach"]}
         self.eolai_transitions = {("bíonn", "blas") : ["ar"], ("blas", "ar") : ["an"], ("ar", "an") : ["mbeagán"]}
         self.eagnai_transitions = {("bíonn", "gach") : ["tosú"], ("gach", "tosú") : ["lag"]}
+        self.beag_transitions = {("bailíonn", "brobh") : ["beart"]}
         self.eolai_saoi_transitions = {("bíonn", "blas") : ["ar"], ("blas", "ar") : ["an"], ("ar", "an") : ["mbeagán", "bhfeallaire"], ("fillean", "an") : ["feall"], ("an", "feall") : ["ar"], ("feall", "ar") : ["an"]}
+
 
     def setup_source_retriever(self):
         self.source_retriever = Mock()
         self.source_retriever.retrieve.return_value = []
-        self.source_retriever.list_speakers.return_value = ["eagnaí", "eolaí", "fáidh", "folamh", "saoi"]
+        self.source_retriever.list_speakers.return_value = ["beag", "eagnaí", "eolaí", "fáidh", "folamh", "saoi"]
         self.source_retriever.get_merge_info.return_value = ["anaithnid\tanaithnid2", "eolaí", "saoi\tsaoi__\tsaoi0"]
 
 
@@ -41,7 +44,8 @@ class TestCachedTransitionRetriever(unittest.TestCase):
 
 
     def test_init_aliasing(self):
-        self.assertEqual(len(self.transition_retriever.aliases), 7)
+        self.assertEqual(len(self.transition_retriever.aliases), 8)
+        self.assertEqual(self.transition_retriever.aliases["beag"], "beag")
         self.assertEqual(self.transition_retriever.aliases["eagnaí"], "eagnaí")
         self.assertEqual(self.transition_retriever.aliases["eolaí"], "eolaí")
         self.assertEqual(self.transition_retriever.aliases["fáidh"], "fáidh")
@@ -131,6 +135,22 @@ class TestCachedTransitionRetriever(unittest.TestCase):
         self.source_retriever.retrieve.assert_has_calls([call("saoi"), call("fáidh"), call("eolaí")], any_order=False)
         self.assertEqual(self.transition_builder.build.call_count, 3)
         self.transition_builder.build.assert_has_calls([call(self.saoi_source, 2), call(self.faidh_source, 2), call(self.eolai_source, 2)], any_order=False)
+
+
+    def test_get_do_not_cache_small(self):
+        self.source_retriever.retrieve.return_value = self.beag_source
+        self.transition_builder.build.return_value = self.beag_transitions
+
+        speaker_names, transitions = self.transition_retriever.get(["beag"])
+
+        self.assertEqual(speaker_names, ["beag"])
+        self.assertEqual(transitions, self.beag_transitions)
+        self.assertEqual(self.transition_retriever.cache[0], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[1], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.cache[2], (-1, "", {}))
+        self.assertEqual(self.transition_retriever.age_counter, 0)
+        self.source_retriever.retrieve.assert_called_once_with("beag")
+        self.transition_builder.build.assert_called_once_with(self.beag_source, 2)
 
 
     def test_get_cached_singular(self):

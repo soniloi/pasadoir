@@ -1,16 +1,16 @@
 from collections import namedtuple
 
+import config
+
 CacheItem = namedtuple("CacheItem", ["age", "key", "value"])
 
 class CachedTransitionRetriever:
 
-    LOOKBACK_LENGTH = 2
-    DEFAULT_CAPACITY = 12
-
-    def __init__(self, source_retriever, transition_builder, capacity=DEFAULT_CAPACITY):
+    def __init__(self, source_retriever, transition_builder, capacity=config.CACHE_CAPACITY, min_lookbacks=config.CACHE_MIN_LOOKBACKS):
         self.source_retriever = source_retriever
         self.transition_builder = transition_builder
         self.capacity = capacity
+        self.min_lookbacks = min_lookbacks
         self.max_merged_speakers = self.capacity - 1
         self.refresh()
 
@@ -88,7 +88,7 @@ class CachedTransitionRetriever:
         transitions = {}
         source = self.source_retriever.retrieve(speaker_name)
         if source:
-            transitions = self.transition_builder.build(source, CachedTransitionRetriever.LOOKBACK_LENGTH)
+            transitions = self.transition_builder.build(source, config.LOOKBACK_LENGTH)
             if transitions:
                 self.update_cache_line(min_age_index, speaker_name, transitions)
 
@@ -149,7 +149,8 @@ class CachedTransitionRetriever:
             transitions[lookback] += follows
 
 
-    def update_cache_line(self, index, key, value):
-        self.cache[index] = CacheItem(self.age_counter, key, value)
-        self.age_counter += 1
+    def update_cache_line(self, index, key, transitions):
+        if len(transitions) >= self.min_lookbacks:
+            self.cache[index] = CacheItem(self.age_counter, key, transitions)
+            self.age_counter += 1
         #print(["{0}|{1}|{2}".format(item.key, item.age, len(item.value)) for item in self.cache])
