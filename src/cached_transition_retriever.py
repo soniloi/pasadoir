@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 
 import config
 
@@ -34,9 +34,10 @@ class CachedTransitionRetriever:
 
 
     def resolve_speaker_names(self, speaker_nicks):
-        names = self.speaker_collection.resolve_names(speaker_nicks)[:self.max_merged_speakers]
-        names.sort()
-        return names
+        names = self.speaker_collection.resolve_names(speaker_nicks)
+        trimmed_names = list(OrderedDict.fromkeys(names))[:self.max_merged_speakers]
+        trimmed_names.sort()
+        return trimmed_names
 
 
     def get_by_name(self, speaker_name):
