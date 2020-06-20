@@ -3,8 +3,9 @@ import message_templates
 
 class MetaRequestProcessor:
 
-    def __init__(self, transition_retriever):
+    def __init__(self, transition_retriever, speaker_collection):
         self.transition_retriever = transition_retriever
+        self.speaker_collection = speaker_collection
 
 
     def process(self, request):
@@ -23,6 +24,7 @@ class MetaRequestProcessor:
 
 
     def process_refresh(self, arguments):
+        self.speaker_collection.refresh()
         self.transition_retriever.refresh()
         return message_templates.META_REFRESH
 

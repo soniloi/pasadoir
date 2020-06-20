@@ -6,9 +6,11 @@ CacheItem = namedtuple("CacheItem", ["age", "key", "value"])
 
 class CachedTransitionRetriever:
 
-    def __init__(self, source_retriever, transition_builder, capacity=config.CACHE_CAPACITY, min_lookbacks=config.CACHE_MIN_LOOKBACKS):
+    def __init__(self, source_retriever, transition_builder, speaker_collection,
+            capacity=config.CACHE_CAPACITY, min_lookbacks=config.CACHE_MIN_LOOKBACKS):
         self.source_retriever = source_retriever
         self.transition_builder = transition_builder
+        self.speaker_collection = speaker_collection
         self.capacity = capacity
         self.min_lookbacks = min_lookbacks
         self.max_merged_speakers = self.capacity - 1
@@ -16,37 +18,8 @@ class CachedTransitionRetriever:
 
 
     def refresh(self):
-        self.speaker_names, self.aliases = self.build_alias_map()
         self.cache = [CacheItem(age=-1, key="", value={})] * self.capacity
         self.age_counter = 0
-
-
-    def build_alias_map(self):
-        aliases = {}
-
-        speaker_names = self.source_retriever.list_speakers()
-        for name in speaker_names:
-            aliases[name] = name
-
-        merge_info_lines = self.source_retriever.get_merge_info()
-        for line in merge_info_lines:
-            self.add_alias_line(aliases, speaker_names, line)
-
-        return speaker_names, aliases
-
-
-    def add_alias_line(self, aliases, speaker_names, line):
-        tokens = line.strip().split()
-        if len(tokens) < 2:
-            return
-
-        primary = tokens[0]
-        if not primary in speaker_names:
-            return
-
-        secondaries = tokens[1:]
-        for alias in secondaries:
-            aliases[alias] = primary
 
 
     def get(self, speaker_nicks):
@@ -61,14 +34,9 @@ class CachedTransitionRetriever:
 
 
     def resolve_speaker_names(self, speaker_nicks):
-        speaker_names = []
-
-        for nick in speaker_nicks[:self.max_merged_speakers]:
-            if nick in self.aliases:
-                speaker_names.append(self.aliases[nick])
-
-        speaker_names.sort()
-        return speaker_names
+        names = self.speaker_collection.resolve_names(speaker_nicks)[:self.max_merged_speakers]
+        names.sort()
+        return names
 
 
     def get_by_name(self, speaker_name):
