@@ -1,3 +1,14 @@
+class Speaker:
+
+    def __init__(self, name):
+        self.name = name
+        self.aliases = []
+
+
+    def add_alias(self, alias):
+        self.aliases.append(alias)
+
+
 class SpeakerCollection:
 
     def __init__(self, source_retriever):
@@ -6,42 +17,47 @@ class SpeakerCollection:
 
 
     def refresh(self):
-        self.speakers = self.build_alias_map()
+        self.speakers = self.build_speaker_map()
 
 
-    def build_alias_map(self):
-        aliases = {}
+    def build_speaker_map(self):
+        speakers = {}
 
         speaker_names = self.source_retriever.list_speakers()
         for name in speaker_names:
-            aliases[name] = name
+            speakers[name] = Speaker(name)
 
         merge_info_lines = self.source_retriever.get_merge_info()
         for line in merge_info_lines:
-            self.add_alias_line(aliases, speaker_names, line)
+            self.add_alias_line(speakers, speaker_names, line)
 
-        return aliases
+        return speakers
 
 
-    def add_alias_line(self, aliases, speaker_names, line):
+    def add_alias_line(self, speakers, speaker_names, line):
         tokens = line.strip().split()
         if len(tokens) < 2:
             return
 
-        primary = tokens[0]
-        if not primary in speaker_names:
+        name = tokens[0]
+        if not name in speaker_names:
             return
 
         secondaries = tokens[1:]
         for alias in secondaries:
-            aliases[alias] = primary
+            speakers[alias] = speakers[name]
+            speakers[name].add_alias(alias)
 
 
-    def resolve_names(self, speaker_nicks):
-        speaker_names = []
+    def resolve_speaker(self, nick):
+        return self.speakers.get(nick, None)
 
-        for nick in speaker_nicks:
+
+    def resolve_names(self, nicks):
+        names = []
+
+        for nick in nicks:
             if nick in self.speakers:
-                speaker_names.append(self.speakers[nick])
+                names.append(self.speakers[nick].name)
 
-        return speaker_names
+        return names

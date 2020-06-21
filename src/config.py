@@ -7,3 +7,5 @@ CACHE_MIN_LOOKBACKS = 5000
 
 GENERATE_REQUEST_TRIGGER = "!"
 META_REQUEST_TRIGGER = "@"
+
+STATS_SPEAKER_ALIAS_COUNT = 3 # This must be greater than or equal to 2

@@ -23,14 +23,18 @@ class TestSpeakerCollection(unittest.TestCase):
 
     def test_init_aliasing(self):
         self.assertEqual(len(self.collection.speakers), 8)
-        self.assertEqual(self.collection.speakers["beag"], "beag")
-        self.assertEqual(self.collection.speakers["eagnaí"], "eagnaí")
-        self.assertEqual(self.collection.speakers["eolaí"], "eolaí")
-        self.assertEqual(self.collection.speakers["fáidh"], "fáidh")
-        self.assertEqual(self.collection.speakers["folamh"], "folamh")
-        self.assertEqual(self.collection.speakers["saoi"], "saoi")
-        self.assertEqual(self.collection.speakers["saoi__"], "saoi")
-        self.assertEqual(self.collection.speakers["saoi0"], "saoi")
+        self.assertEqual(self.collection.speakers["beag"].name, "beag")
+        self.assertEqual(self.collection.speakers["eagnaí"].name, "eagnaí")
+        self.assertEqual(self.collection.speakers["eolaí"].name, "eolaí")
+        self.assertEqual(self.collection.speakers["fáidh"].name, "fáidh")
+        self.assertEqual(self.collection.speakers["folamh"].name, "folamh")
+        self.assertEqual(self.collection.speakers["saoi"].name, "saoi")
+        self.assertEqual(self.collection.speakers["saoi__"].name, "saoi")
+        self.assertEqual(self.collection.speakers["saoi0"].name, "saoi")
+        saoi = self.collection.speakers["saoi"]
+        self.assertEqual(len(saoi.aliases), 2)
+        self.assertTrue("saoi__" in saoi.aliases)
+        self.assertTrue("saoi0" in saoi.aliases)
 
 
     def test_resolve_names_single_known_same(self):
