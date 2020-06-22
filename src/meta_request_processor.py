@@ -3,10 +3,13 @@ import message_templates
 
 class MetaRequestProcessor:
 
-    def __init__(self, transition_retriever, speaker_collection, rand):
+    STATS_DATE_FORMAT = "%Y-%m-%d at %H.%M.%S"
+
+    def __init__(self, transition_retriever, speaker_collection, rand, start_time):
         self.transition_retriever = transition_retriever
         self.speaker_collection = speaker_collection
         self.rand = rand
+        self.start_time = start_time
 
 
     def process(self, request):
@@ -31,10 +34,29 @@ class MetaRequestProcessor:
 
 
     def process_stats(self, arguments):
-        if not arguments:
-            return ""
+        if arguments:
+            return self.process_speaker_stats(arguments[0])
+        return self.process_general_stats()
 
-        speaker_nick = arguments[0]
+
+    def process_general_stats(self):
+        speaker_count = self.speaker_collection.get_speaker_count()
+        start_date = self.format_date_for_stats(self.start_time)
+        source_gen_date = self.format_date_for_stats(self.speaker_collection.get_source_generated_date())
+        source_channels = self.format_list_for_stats(self.speaker_collection.get_source_channels())
+        return message_templates.META_STATS_GENERAL.format(speaker_count, start_date, source_gen_date,
+            source_channels)
+
+
+    def format_date_for_stats(self, date):
+        return date.strftime(MetaRequestProcessor.STATS_DATE_FORMAT)
+
+
+    def format_list_for_stats(self, lis):
+        return ", ".join(lis[:-1]) + ", and " + lis[-1]
+
+
+    def process_speaker_stats(self, speaker_nick):
         speaker = self.speaker_collection.resolve_speaker(speaker_nick)
         if not speaker:
             return ""

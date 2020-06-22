@@ -1,3 +1,6 @@
+import datetime
+import time
+
 import config
 from cached_transition_retriever import CachedTransitionRetriever
 from meta_request_processor import MetaRequestProcessor
@@ -18,7 +21,8 @@ class RequestHandler:
         rand = Rand()
         quote_generator = QuoteGenerator(rand)
         self.quote_processor = QuoteRequestProcessor(transition_retriever, quote_generator)
-        self.meta_processor = MetaRequestProcessor(transition_retriever, speaker_collection, rand)
+        start_time = datetime.datetime.fromtimestamp(time.time())
+        self.meta_processor = MetaRequestProcessor(transition_retriever, speaker_collection, rand, start_time)
         self.processors = {
             config.GENERATE_REQUEST_TRIGGER : self.quote_processor,
             config.META_REQUEST_TRIGGER : self.meta_processor,

@@ -1,3 +1,4 @@
+import datetime
 import unittest
 from unittest.mock import Mock
 
@@ -19,9 +20,10 @@ class TestSpeakerCollection(unittest.TestCase):
         self.source_retriever.retrieve.return_value = []
         self.source_retriever.list_speakers.return_value = ["beag", "eagnaí", "eolaí", "fáidh", "folamh", "saoi"]
         self.source_retriever.get_merge_info.return_value = ["anaithnid\tanaithnid2", "eolaí", "saoi\tsaoi__\tsaoi0"]
+        self.source_retriever.get_source_info.return_value = ["date=695280768", "channels=#farraige #oileán #rúin", "unknownkey=unknownvalue"]
 
 
-    def test_init_aliasing(self):
+    def test_init_aliasing_and_source_info(self):
         self.assertEqual(len(self.collection.speakers), 8)
         self.assertEqual(self.collection.speakers["beag"].name, "beag")
         self.assertEqual(self.collection.speakers["eagnaí"].name, "eagnaí")
@@ -35,6 +37,10 @@ class TestSpeakerCollection(unittest.TestCase):
         self.assertEqual(len(saoi.aliases), 2)
         self.assertTrue("saoi__" in saoi.aliases)
         self.assertTrue("saoi0" in saoi.aliases)
+
+        self.assertEqual(len(self.collection.source_info), 2)
+        self.assertEqual(self.collection.source_info["date"], datetime.datetime.utcfromtimestamp(695280768))
+        self.assertEqual(self.collection.source_info["channels"], ["#farraige", "#oileán", "#rúin"])
 
 
     def test_resolve_names_single_known_same(self):

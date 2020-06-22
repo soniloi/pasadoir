@@ -1,3 +1,4 @@
+import datetime
 import unittest
 from unittest.mock import Mock
 
@@ -10,7 +11,8 @@ class TestMetaRequestProcessor(unittest.TestCase):
         self.transition_retriever = Mock()
         self.speaker_collection = Mock()
         self.rand = Mock()
-        self.processor = MetaRequestProcessor(self.transition_retriever, self.speaker_collection, self.rand)
+        time = datetime.datetime.utcfromtimestamp(0)
+        self.processor = MetaRequestProcessor(self.transition_retriever, self.speaker_collection, self.rand, time)
 
 
     def tearDown(self):
@@ -44,10 +46,14 @@ class TestMetaRequestProcessor(unittest.TestCase):
         self.speaker_collection.refresh.assert_called_once()
 
 
-    def test_process_stats_non_speaker(self):
+    def test_process_stats_general(self):
+        self.speaker_collection.get_speaker_count.return_value = 17
+        self.speaker_collection.get_source_generated_date.return_value = datetime.datetime.fromtimestamp(695280768)
+        self.speaker_collection.get_source_channels.return_value = ["#farraige", "#oileán", "#rúin"]
+
         response = self.processor.process("stats")
 
-        self.assertEqual(response, "")
+        self.assertEqual(response, "I have material from 17 speakers. I have been running since 1970-01-01 at 00.00.00. My source material was generated on 1992-01-13 at 05.32.48. Its source channels were #farraige, #oileán, and #rúin.")
         self.speaker_collection.resolve_speaker.assert_not_called()
         self.transition_retriever.get_by_name.assert_not_called()
         self.rand.shuffled.assert_not_called()

@@ -1,3 +1,7 @@
+import datetime
+
+import config
+
 class Speaker:
 
     def __init__(self, name):
@@ -17,7 +21,41 @@ class SpeakerCollection:
 
 
     def refresh(self):
-        self.speakers = self.build_speaker_map()
+        self.source_info = self.build_source_info()
+        self.speaker_names, self.speakers = self.build_speaker_map()
+
+
+    def build_source_info(self):
+        info = {}
+
+        key_date = config.SOURCE_INFO_KEY_DATE
+        key_channels = config.SOURCE_INFO_KEY_CHANNELS
+
+        meta_lines = self.source_retriever.get_source_info()
+        for line in meta_lines:
+            tokens = line.split("=")
+
+            if len(tokens) == 2:
+                key = tokens [0]
+                value = tokens[1]
+                if key == key_date:
+                    info[key_date] = datetime.datetime.fromtimestamp(int(value))
+                elif key == key_channels:
+                    info[key_channels] = value.split()
+
+        return info
+
+
+    def get_source_generated_date(self):
+        return self.source_info.get(config.SOURCE_INFO_KEY_DATE, None)
+
+
+    def get_source_channels(self):
+        return self.source_info.get(config.SOURCE_INFO_KEY_CHANNELS, None)
+
+
+    def get_speaker_count(self):
+        return len(self.speaker_names)
 
 
     def build_speaker_map(self):
@@ -31,7 +69,7 @@ class SpeakerCollection:
         for line in merge_info_lines:
             self.add_alias_line(speakers, speaker_names, line)
 
-        return speakers
+        return speaker_names, speakers
 
 
     def add_alias_line(self, speakers, speaker_names, line):
