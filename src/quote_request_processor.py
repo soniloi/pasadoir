@@ -5,13 +5,19 @@ class QuoteRequestProcessor:
         self.generator = generator
 
 
-    def process(self, request):
+    def process(self, request, options={}):
+        reverse = options.get("reverse", False)
+
         speaker_nicks, seed_tokens = self.split_request(request)
-        speaker_names, transitions = self.transition_retriever.get(speaker_nicks)
+        speaker_names, transitions = self.transition_retriever.get(speaker_nicks, reverse)
 
         if transitions:
+            if reverse:
+                seed_tokens = tuple(list(reversed(seed_tokens)))
             quote = self.generator.generate(transitions, seed_tokens)
             if quote:
+                if reverse:
+                    quote = list(reversed(quote))
                 return ("[{0}] {1}".format(":".join(speaker_names), " ".join(quote)))
 
         return ""

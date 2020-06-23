@@ -12,7 +12,7 @@ class MetaRequestProcessor:
         self.start_time = start_time
 
 
-    def process(self, request):
+    def process(self, request, options={}):
         request = request.lower().split()
         command = request[0]
         arguments = request[1:]

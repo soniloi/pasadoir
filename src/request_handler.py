@@ -24,8 +24,9 @@ class RequestHandler:
         start_time = datetime.datetime.fromtimestamp(time.time())
         self.meta_processor = MetaRequestProcessor(transition_retriever, speaker_collection, rand, start_time)
         self.processors = {
-            config.GENERATE_REQUEST_TRIGGER : self.quote_processor,
-            config.META_REQUEST_TRIGGER : self.meta_processor,
+            config.GENERATE_REQUEST_TRIGGER : (self.quote_processor, {}),
+            config.GENERATE_REVERSE_REQUEST_TRIGGER : (self.quote_processor, {"reverse" : True}),
+            config.META_REQUEST_TRIGGER : (self.meta_processor, {}),
         }
 
 
@@ -35,9 +36,9 @@ class RequestHandler:
             return ""
 
         if request[0] in self.processors:
-            processor = self.processors[request[0]]
+            processor, options = self.processors[request[0]]
             request = request[1:]
             if request:
-                return processor.process(request)
+                return processor.process(request, options)
 
         return ""

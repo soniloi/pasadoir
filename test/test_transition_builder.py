@@ -54,5 +54,19 @@ class TestTransitionBuilder(unittest.TestCase):
         self. assertEqual(transitions[("the", "king's")], ["horses", "men"])
 
 
+    def test_build_reverse(self):
+        source = [
+            "the cat sat on the mat",
+        ]
+
+        transitions = self.builder.build(source, 2, reverse=True)
+
+        self.assertEqual(len(transitions), 4)
+        self. assertEqual(transitions[("mat", "the")], ["on"])
+        self. assertEqual(transitions[("the", "on")], ["sat"])
+        self. assertEqual(transitions[("on", "sat")], ["cat"])
+        self. assertEqual(transitions[("sat", "cat")], ["the"])
+
+
 if __name__ == "__main__":
     unittest.main()

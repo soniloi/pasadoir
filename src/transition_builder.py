@@ -1,11 +1,13 @@
 class TransitionBuilder:
 
-    def build(self, lines, lookback_length):
+    def build(self, lines, lookback_length, reverse=False):
         transitions = {}
 
         for line in lines:
             words = line.split()
             if len(words) >= lookback_length:
+                if reverse:
+                    words = list(reversed(words))
                 self.process_source_line(words, transitions, lookback_length)
 
         return transitions
