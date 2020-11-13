@@ -1,7 +1,7 @@
 import argparse
 
 from twisted.words.protocols import irc
-from twisted.internet import reactor, protocol
+from twisted.internet import reactor, protocol, ssl
 
 import config
 from request_handler import RequestHandler
@@ -52,8 +52,13 @@ if __name__ == "__main__":
     argparser.add_argument("port")
     argparser.add_argument("channel")
     argparser.add_argument("source_dir")
+    argparser.add_argument("--ssl", action="store_true")
     args = argparser.parse_args()
 
     factory = PasadoirBotFactory(args.channel, args.source_dir)
-    reactor.connectTCP(args.host, int(args.port), factory)
+    if args.ssl:
+        reactor.connectSSL(args.host, int(args.port), factory, ssl.ClientContextFactory())
+    else:
+        reactor.connectTCP(args.host, int(args.port), factory)
     reactor.run()
+
