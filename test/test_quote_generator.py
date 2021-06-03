@@ -17,7 +17,7 @@ class TestQuoteGenerator(unittest.TestCase):
     def test_generate_no_source(self):
         quote = self.generator.generate({})
 
-        self.assertEqual(quote, None)
+        self.assertEqual(quote, [])
 
 
     def test_generate_single_choice(self):
@@ -45,7 +45,7 @@ class TestQuoteGenerator(unittest.TestCase):
 
         quote = self.generator.generate(transitions, ("one", "day"))
 
-        self.assertEqual(quote, None)
+        self.assertEqual(quote, [])
 
 
     def test_generate_with_overlong_initial(self):
@@ -59,7 +59,7 @@ class TestQuoteGenerator(unittest.TestCase):
 
         quote = self.generator.generate(transitions, ("the", "cat", "sat"))
 
-        self.assertEqual(quote, None)
+        self.assertEqual(quote, [])
 
 
     def test_generate_with_full_valid_initial(self):
@@ -87,7 +87,7 @@ class TestQuoteGenerator(unittest.TestCase):
 
         quote = self.generator.generate(transitions, ("blah",))
 
-        self.assertEqual(quote, None)
+        self.assertEqual(quote, [])
 
 
     def test_generate_with_partial_valid_initial(self):

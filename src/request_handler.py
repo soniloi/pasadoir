@@ -6,7 +6,7 @@ from cached_transition_retriever import CachedTransitionRetriever
 from meta_request_processor import MetaRequestProcessor
 from quote_generator import QuoteGenerator
 from rand import Rand
-from quote_request_processor import QuoteRequestProcessor
+from quote_request_processor import QuoteDirection, QuoteRequestProcessor
 from source_retriever import SourceRetriever
 from speaker_collection import SpeakerCollection
 from transition_builder import TransitionBuilder
@@ -24,8 +24,9 @@ class RequestHandler:
         start_time = datetime.datetime.fromtimestamp(time.time())
         self.meta_processor = MetaRequestProcessor(transition_retriever, speaker_collection, rand, start_time)
         self.processors = {
-            config.GENERATE_REQUEST_TRIGGER : (self.quote_processor, {}),
-            config.GENERATE_REVERSE_REQUEST_TRIGGER : (self.quote_processor, {"reverse" : True}),
+            config.GENERATE_REQUEST_TRIGGER : (self.quote_processor, {"direction" : QuoteDirection.BIDI}),
+            config.GENERATE_FORWARD_REQUEST_TRIGGER : (self.quote_processor, {"direction" : QuoteDirection.FORWARD}),
+            config.GENERATE_REVERSE_REQUEST_TRIGGER : (self.quote_processor, {"direction" : QuoteDirection.REVERSE}),
             config.META_REQUEST_TRIGGER : (self.meta_processor, {}),
         }
 

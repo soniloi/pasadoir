@@ -8,11 +8,11 @@ class QuoteGenerator:
 
     def generate(self, transitions, initial=None):
         if not transitions:
-            return None
+            return []
 
         initial = self.resolve_initial_lookback(transitions, initial)
         if not initial:
-            return None
+            return []
 
         return self.generate_from_initial(transitions, initial)
 

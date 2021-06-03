@@ -1,7 +1,7 @@
 import unittest
-from unittest.mock import Mock
+from unittest.mock import call, Mock
 
-from quote_request_processor import QuoteRequestProcessor
+from quote_request_processor import QuoteDirection, QuoteRequestProcessor
 
 class TestQuoteRequestProcessor(unittest.TestCase):
 
@@ -27,7 +27,7 @@ class TestQuoteRequestProcessor(unittest.TestCase):
         response = self.processor.process("anaithnid")
 
         self.assertEqual(response, "")
-        self.retriever.get.assert_called_once_with(["anaithnid"], False)
+        self.retriever.get.assert_called_once_with(["anaithnid"], reverse=False)
         self.generator.generate.assert_not_called()
 
 
@@ -37,18 +37,25 @@ class TestQuoteRequestProcessor(unittest.TestCase):
         response = self.processor.process("cat")
 
         self.assertEqual(response, "")
-        self.retriever.get.assert_called_once_with(["cat"], False)
+        self.retriever.get.assert_called_once_with(["cat"], reverse=False)
         self.generator.generate.assert_not_called()
 
 
     def test_process_generate_request_no_quote(self):
-        self.retriever.get.return_value = (["saoi"], self.saoi_transitions)
+        self.retriever.get.side_effect = [(["saoi"], self.saoi_transitions), (["saoi"], self.saoi_transitions_reversed)]
+        self.generator.generate.side_effect = [[], []]
 
         response = self.processor.process("saoi lá amháin")
 
         self.assertEqual(response, "")
-        self.retriever.get.assert_called_once_with(["saoi"], False)
-        self.generator.generate.assert_called_once_with(self.saoi_transitions, ("lá", "amháin"))
+        self.retriever.get.assert_has_calls([
+            call(["saoi"], reverse=False),
+            call(["saoi"], reverse=True),
+        ])
+        self.generator.generate.assert_has_calls([
+            call(self.saoi_transitions, ("lá", "amháin")),
+            call(self.saoi_transitions_reversed, ("amháin", "lá")),
+        ])
 
 
     def test_process_generate_request_valid_no_whitespace(self):
@@ -58,7 +65,7 @@ class TestQuoteRequestProcessor(unittest.TestCase):
         response = self.processor.process("saoi")
 
         self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
-        self.retriever.get.assert_called_once_with(["saoi"], False)
+        self.retriever.get.assert_called_once_with(["saoi"], reverse=False)
         self.generator.generate.assert_called_once_with(self.saoi_transitions, ())
 
 
@@ -69,7 +76,7 @@ class TestQuoteRequestProcessor(unittest.TestCase):
         response = self.processor.process("     saoi")
 
         self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
-        self.retriever.get.assert_called_once_with(["saoi"], False)
+        self.retriever.get.assert_called_once_with(["saoi"], reverse=False)
         self.generator.generate.assert_called_once_with(self.saoi_transitions, ())
 
 
@@ -80,7 +87,7 @@ class TestQuoteRequestProcessor(unittest.TestCase):
         response = self.processor.process("saoi_")
 
         self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
-        self.retriever.get.assert_called_once_with(["saoi_"], False)
+        self.retriever.get.assert_called_once_with(["saoi_"], reverse=False)
         self.generator.generate.assert_called_once_with(self.saoi_transitions, ())
 
 
@@ -91,19 +98,42 @@ class TestQuoteRequestProcessor(unittest.TestCase):
         response = self.processor.process("SAOI")
 
         self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
-        self.retriever.get.assert_called_once_with(["saoi"], False)
+        self.retriever.get.assert_called_once_with(["saoi"], reverse=False)
         self.generator.generate.assert_called_once_with(self.saoi_transitions, ())
 
 
-    def test_process_generate_request_valid_with_seed(self):
-        self.retriever.get.return_value = (["saoi"], self.saoi_transitions)
-        self.generator.generate.return_value = ["feall", "ar", "an", "bhfeallaire"]
+    def test_process_generate_request_valid_with_seed_single(self):
+        self.retriever.get.side_effect = [(["saoi"], self.saoi_transitions), (["saoi"], self.saoi_transitions_reversed)]
+        self.generator.generate.side_effect = [["ar", "an", "bhfeallaire"], ["ar", "feall"]]
 
-        response = self.processor.process("saoi feall ar")
+        response = self.processor.process("saoi ar")
 
         self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
-        self.retriever.get.assert_called_once_with(["saoi"], False)
-        self.generator.generate.assert_called_once_with(self.saoi_transitions, ("feall", "ar"))
+        self.retriever.get.assert_has_calls([
+            call(["saoi"], reverse=False),
+            call(["saoi"], reverse=True),
+        ])
+        self.generator.generate.assert_has_calls([
+            call(self.saoi_transitions, ("ar",)),
+            call(self.saoi_transitions_reversed, ("ar",)),
+        ])
+
+
+    def test_process_generate_request_valid_with_seed_double(self):
+        self.retriever.get.side_effect = [(["saoi"], self.saoi_transitions), (["saoi"], self.saoi_transitions_reversed)]
+        self.generator.generate.side_effect = [["ar", "an", "bhfeallaire"], ["an", "ar", "feall"]]
+
+        response = self.processor.process("saoi ar an")
+
+        self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
+        self.retriever.get.assert_has_calls([
+            call(["saoi"], reverse=False),
+            call(["saoi"], reverse=True),
+        ])
+        self.generator.generate.assert_has_calls([
+            call(self.saoi_transitions, ("ar", "an")),
+            call(self.saoi_transitions_reversed, ("an", "ar")),
+        ])
 
 
     def test_process_generate_request_valid_merge(self):
@@ -113,18 +143,29 @@ class TestQuoteRequestProcessor(unittest.TestCase):
         response = self.processor.process("eolaí:saoi")
 
         self.assertEqual(response, "[eolaí:saoi] bíonn blas ar an bhfeallaire")
-        self.retriever.get.assert_called_once_with(["eolaí", "saoi"], False)
+        self.retriever.get.assert_called_once_with(["eolaí", "saoi"], reverse=False)
         self.generator.generate.assert_called_once_with(self.eolai_saoi_transitions, ())
 
 
-    def test_process_generate_request_valid_reversed(self):
+    def test_process_generate_request_valid_forward(self):
+        self.retriever.get.return_value = (["saoi"], self.saoi_transitions)
+        self.generator.generate.return_value = ["filleann", "an", "feall", "ar", "an", "bhfeallaire"]
+
+        response = self.processor.process("saoi filleann an", options={"direction" : QuoteDirection.FORWARD})
+
+        self.assertEqual(response, "[saoi] filleann an feall ar an bhfeallaire")
+        self.retriever.get.assert_called_once_with(["saoi"], reverse=False)
+        self.generator.generate.assert_called_once_with(self.saoi_transitions, ("filleann", "an"))
+
+
+    def test_process_generate_request_valid_reverse(self):
         self.retriever.get.return_value = (["saoi"], self.saoi_transitions_reversed)
         self.generator.generate.return_value = ["bhfeallaire", "an", "ar", "feall", "an", "filleann"]
 
-        response = self.processor.process("saoi an bhfeallaire", options={"reverse" : True})
+        response = self.processor.process("saoi an bhfeallaire", options={"direction" : QuoteDirection.REVERSE})
 
         self.assertEqual(response, "[saoi] filleann an feall ar an bhfeallaire")
-        self.retriever.get.assert_called_once_with(["saoi"], True)
+        self.retriever.get.assert_called_once_with(["saoi"], reverse=True)
         self.generator.generate.assert_called_once_with(self.saoi_transitions_reversed, ("bhfeallaire", "an"))
 
 

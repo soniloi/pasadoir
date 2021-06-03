@@ -122,4 +122,4 @@ class CachedTransitionRetriever:
         if len(transitions) >= self.min_lookbacks:
             self.cache[index] = CacheItem(self.age_counter, key, transitions, reverse)
             self.age_counter += 1
-        #print(["{0}|{1}|{2}|{3}".format(item.key, item.age, len(item.value), item.reversed) for item in self.cache])
+        #print(["{0}|{1}|{2}|{3}".format(item.key, item.age, len(item.value), int(item.reversed)) for item in self.cache])
