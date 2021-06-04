@@ -13,7 +13,7 @@ class CachedTransitionRetriever:
         self.speaker_collection = speaker_collection
         self.capacity = capacity
         self.min_lookbacks = min_lookbacks
-        self.max_merged_speakers = self.capacity - 1
+        self.max_merged_speakers = int(self.capacity / 2) - 1
         self.refresh()
 
 
