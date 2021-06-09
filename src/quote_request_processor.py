@@ -45,7 +45,8 @@ class QuoteRequestProcessor:
             reversed_seed_tokens = tuple(list(reversed(seed_tokens)))
             quote_reverse = self.generator.generate(reverse_transitions, reversed_seed_tokens)
             quote_reverse = list(reversed(quote_reverse))
-            quote = quote_reverse + quote_forward[len(seed_tokens):]
+            word_cutoff_index = self.get_word_cutoff_index(quote_forward, quote_reverse, seed_tokens)
+            quote = quote_reverse + quote_forward[word_cutoff_index:]
 
         if not quote:
             return ""
@@ -53,9 +54,14 @@ class QuoteRequestProcessor:
         return ("[{0}] {1}".format(":".join(speaker_names), " ".join(quote)))
 
 
+    def get_word_cutoff_index(self, quote_forward, quote_reverse, seed_tokens):
+        if quote_forward and quote_reverse:
+            return len(seed_tokens)
+        return 0
+
+
     def split_request(self, request):
         request_tokens = request.split()
         speaker_nicks = request_tokens[0].lower().split(":")
         seed_tokens = tuple(request_tokens[1:])
         return speaker_nicks, seed_tokens
-

@@ -136,6 +136,40 @@ class TestQuoteRequestProcessor(unittest.TestCase):
         ])
 
 
+    def test_process_generate_request_valid_with_seed_only_startswith(self):
+        self.retriever.get.side_effect = [(["saoi"], self.saoi_transitions), (["saoi"], self.saoi_transitions_reversed)]
+        self.generator.generate.side_effect = [["ar", "an", "bhfeallaire"], []]
+
+        response = self.processor.process("saoi ar an")
+
+        self.assertEqual(response, "[saoi] ar an bhfeallaire")
+        self.retriever.get.assert_has_calls([
+            call(["saoi"], reverse=False),
+            call(["saoi"], reverse=True),
+        ])
+        self.generator.generate.assert_has_calls([
+            call(self.saoi_transitions, ("ar", "an")),
+            call(self.saoi_transitions_reversed, ("an", "ar")),
+        ])
+
+
+    def test_process_generate_request_valid_with_seed_only_endswith(self):
+        self.retriever.get.side_effect = [(["saoi"], self.saoi_transitions), (["saoi"], self.saoi_transitions_reversed)]
+        self.generator.generate.side_effect = [[], ["an", "ar", "feall"]]
+
+        response = self.processor.process("saoi ar an")
+
+        self.assertEqual(response, "[saoi] feall ar an")
+        self.retriever.get.assert_has_calls([
+            call(["saoi"], reverse=False),
+            call(["saoi"], reverse=True),
+        ])
+        self.generator.generate.assert_has_calls([
+            call(self.saoi_transitions, ("ar", "an")),
+            call(self.saoi_transitions_reversed, ("an", "ar")),
+        ])
+
+
     def test_process_generate_request_valid_merge(self):
         self.retriever.get.return_value = (["eolaí", "saoi"], self.eolai_saoi_transitions)
         self.generator.generate.return_value = ["bíonn", "blas", "ar", "an", "bhfeallaire"]
