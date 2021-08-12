@@ -108,7 +108,7 @@ class TestQuoteRequestProcessor(unittest.TestCase):
 
         response = self.processor.process("saoi ar")
 
-        self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
+        self.assertEqual(response, "[saoi] feall \x02\x038ar\x0f an bhfeallaire")
         self.retriever.get.assert_has_calls([
             call(["saoi"], reverse=False),
             call(["saoi"], reverse=True),
@@ -125,7 +125,7 @@ class TestQuoteRequestProcessor(unittest.TestCase):
 
         response = self.processor.process("saoi ar an")
 
-        self.assertEqual(response, "[saoi] feall ar an bhfeallaire")
+        self.assertEqual(response, "[saoi] feall \x02\x038ar an\x0f bhfeallaire")
         self.retriever.get.assert_has_calls([
             call(["saoi"], reverse=False),
             call(["saoi"], reverse=True),
@@ -142,7 +142,7 @@ class TestQuoteRequestProcessor(unittest.TestCase):
 
         response = self.processor.process("saoi ar an")
 
-        self.assertEqual(response, "[saoi] ar an bhfeallaire")
+        self.assertEqual(response, "[saoi] \x02\x038ar an\x0f bhfeallaire")
         self.retriever.get.assert_has_calls([
             call(["saoi"], reverse=False),
             call(["saoi"], reverse=True),
@@ -159,7 +159,7 @@ class TestQuoteRequestProcessor(unittest.TestCase):
 
         response = self.processor.process("saoi ar an")
 
-        self.assertEqual(response, "[saoi] feall ar an")
+        self.assertEqual(response, "[saoi] feall \x02\x038ar an\x0f")
         self.retriever.get.assert_has_calls([
             call(["saoi"], reverse=False),
             call(["saoi"], reverse=True),
@@ -187,7 +187,7 @@ class TestQuoteRequestProcessor(unittest.TestCase):
 
         response = self.processor.process("saoi filleann an", options={"direction" : QuoteDirection.FORWARD})
 
-        self.assertEqual(response, "[saoi] filleann an feall ar an bhfeallaire")
+        self.assertEqual(response, "[saoi] \x02\x038filleann an\x0f feall ar an bhfeallaire")
         self.retriever.get.assert_called_once_with(["saoi"], reverse=False)
         self.generator.generate.assert_called_once_with(self.saoi_transitions, ("filleann", "an"))
 
@@ -198,7 +198,7 @@ class TestQuoteRequestProcessor(unittest.TestCase):
 
         response = self.processor.process("saoi an bhfeallaire", options={"direction" : QuoteDirection.REVERSE})
 
-        self.assertEqual(response, "[saoi] filleann an feall ar an bhfeallaire")
+        self.assertEqual(response, "[saoi] filleann an feall ar \x02\x038an bhfeallaire\x0f")
         self.retriever.get.assert_called_once_with(["saoi"], reverse=True)
         self.generator.generate.assert_called_once_with(self.saoi_transitions_reversed, ("bhfeallaire", "an"))
 
